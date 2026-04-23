@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progsant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;0,6..96,800;1,6..96,400&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Inter', sans-serif; background: #fafaf9; }
+  .font-display { font-family: 'Bodoni Moda', serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+  .shadow-hard { box-shadow: 4px 4px 0 0 rgba(0,0,0,1); }
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="border-b-2 border-stone-900 bg-stone-50 sticky top-0 z-10">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-baseline gap-3">
+      <div class="w-2 h-8 bg-red-700"></div>
+      <div>
+        <h1 class="font-display text-3xl font-bold text-stone-900 leading-none">
+          Prog<span class="italic text-red-700">sant</span>
+        </h1>
+        <p class="font-mono text-[10px] uppercase tracking-widest text-stone-500 mt-1">
+          n trabajos · 1 máquina · 5 reglas de secuenciación
+        </p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="app.resetear()" class="text-xs px-3 py-2 border border-stone-300 hover:border-stone-900 transition-colors flex items-center gap-1.5">
+        ↻ Reset
+      </button>
+      <button onclick="app.exportarCSV()" class="text-xs px-3 py-2 bg-stone-900 text-stone-50 hover:bg-red-700 transition-colors flex items-center gap-1.5">
+        ↓ CSV
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-6 py-8 grid lg:grid-cols-12 gap-8">
+
+  <section class="lg:col-span-4">
+    <div class="flex items-baseline justify-between mb-4">
+      <h2 class="font-display text-2xl font-bold text-stone-900">Datos<span class="text-red-700">.</span></h2>
+      <span id="contador" class="font-mono text-[10px] uppercase tracking-widest text-stone-500"></span>
+    </div>
+
+    <div class="bg-white border-2 border-stone-900 shadow-hard">
+      <div class="grid grid-cols-12 border-b-2 border-stone-900 bg-stone-900 text-stone-50">
+        <div class="col-span-2 px-2 py-2 font-mono text-[9px] uppercase tracking-wider text-center">Trab</div>
+        <div class="col-span-2 px-2 py-2 font-mono text-[9px] uppercase tracking-wider text-center border-l border-stone-700">Lleg</div>
+        <div class="col-span-3 px-2 py-2 font-mono text-[9px] uppercase tracking-wider text-center border-l border-stone-700">T.Proc</div>
+        <div class="col-span-3 px-2 py-2 font-mono text-[9px] uppercase tracking-wider text-center border-l border-stone-700">Plazo</div>
+        <div class="col-span-2 px-2 py-2 border-l border-stone-700"></div>
+      </div>
+      <div id="tabla-trabajos"></div>
+      <button onclick="app.agregarTrabajo()" class="w-full py-3 text-xs uppercase tracking-wider text-stone-600 hover:bg-stone-900 hover:text-stone-50 transition-colors flex items-center justify-center gap-2">
+        + Agregar trabajo
+      </button>
+    </div>
+
+    <div class="mt-4 text-[11px] text-stone-600 leading-relaxed">
+      <p><span class="font-mono font-bold text-stone-900">LLEG</span> = orden de llegada · <span class="font-mono font-bold text-stone-900">T.PROC</span> = tiempo de procesamiento · <span class="font-mono font-bold text-stone-900">PLAZO</span> = días para entrega</p>
+    </div>
+  </section>
+
+  <section class="lg:col-span-8 space-y-8">
+
+    <div>
+      <div class="flex items-baseline justify-between mb-4">
+        <h2 class="font-display text-2xl font-bold text-stone-900">Detalle<span class="text-red-700">.</span></h2>
+        <span class="font-mono text-[10px] uppercase tracking-widest text-stone-500">Selecciona una regla</span>
+      </div>
+      <div id="tabs" class="flex flex-wrap border-b-2 border-stone-900 mb-5"></div>
+      <div id="detalle"></div>
+    </div>
+
+    <div>
+      <div class="flex items-baseline justify-between mb-4">
+        <h2 class="font-display text-2xl font-bold text-stone-900">Comparación<span class="text-red-700">.</span></h2>
+        <span class="font-mono text-[10px] uppercase tracking-widest text-stone-500">♔ Verde = mejor valor</span>
+      </div>
+      <div id="comparacion" class="bg-white border-2 border-stone-900 shadow-hard overflow-x-auto"></div>
+    </div>
+
+    <div class="bg-stone-900 text-stone-50 p-6 border-2 border-stone-900">
+      <h3 class="font-mono text-[10px] uppercase tracking-widest text-stone-400 mb-3">∑ Glosario</h3>
+      <div class="grid md:grid-cols-3 gap-6 text-sm">
+        <div>
+          <div class="font-mono text-red-400 font-bold mb-1">TTT</div>
+          <p class="text-stone-300 text-xs leading-relaxed">Tiempo Total de Tránsito: suma de los tiempos de tránsito de todos los trabajos.</p>
+        </div>
+        <div>
+          <div class="font-mono text-red-400 font-bold mb-1">TPT</div>
+          <p class="text-stone-300 text-xs leading-relaxed">Tiempo Promedio de Tránsito: TTT dividido entre el número de trabajos.</p>
+        </div>
+        <div>
+          <div class="font-mono text-red-400 font-bold mb-1">TPR</div>
+          <p class="text-stone-300 text-xs leading-relaxed">Tiempo Promedio de Retraso: suma de retrasos / n. Retraso = máx(0, tránsito − plazo).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer class="border-t border-stone-300 py-6 mt-8">
+  <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+    <p class="font-mono text-[10px] uppercase tracking-widest text-stone-500">◆ Cálculo en tiempo real · Los datos se mantienen en esta sesión</p>
+    <p class="font-display text-sm text-stone-400 italic">Progsant</p>
+  </div>
+</footer>
+
+<script>
+const REGLAS = [
+  { key: 'FCFS', nombre: 'FCFS', descripcion: 'First Come, First Served', orden: 'llegada' },
+  { key: 'SOT',  nombre: 'SOT',  descripcion: 'Shortest Operating Time',  orden: 'tiempo_proc' },
+  { key: 'EDD',  nombre: 'EDD',  descripcion: 'Earliest Due Date',        orden: 'plazo' },
+  { key: 'STR',  nombre: 'STR',  descripcion: 'Slack Time Remaining',     orden: 'holgura' },
+  { key: 'LCFS', nombre: 'LCFS', descripcion: 'Last Come, First Served',  orden: 'llegada_desc' },
+];
+
+const app = {
+  trabajos: [
+    { id: 1, nombre: 'A', llegada: 1, tiempo_proc: 3, plazo: 5 },
+    { id: 2, nombre: 'B', llegada: 2, tiempo_proc: 4, plazo: 6 },
+    { id: 3, nombre: 'C', llegada: 3, tiempo_proc: 2, plazo: 7 },
+    { id: 4, nombre: 'D', llegada: 4, tiempo_proc: 6, plazo: 9 },
+    { id: 5, nombre: 'E', llegada: 5, tiempo_proc: 1, plazo: 2 },
+  ],
+  reglaActiva: 'FCFS',
+
+  calcular(regla) {
+    if (this.trabajos.length === 0) return null;
+    let ordenados = this.trabajos.map(t => ({...t, holgura: t.plazo - t.tiempo_proc}));
+    switch (regla.orden) {
+      case 'llegada': ordenados.sort((a,b) => a.llegada - b.llegada); break;
+      case 'llegada_desc': ordenados.sort((a,b) => b.llegada - a.llegada); break;
+      case 'tiempo_proc': ordenados.sort((a,b) => a.tiempo_proc - b.tiempo_proc || a.llegada - b.llegada); break;
+      case 'plazo': ordenados.sort((a,b) => a.plazo - b.plazo || a.llegada - b.llegada); break;
+      case 'holgura': ordenados.sort((a,b) => a.holgura - b.holgura || a.llegada - b.llegada); break;
+    }
+    let acum = 0;
+    const sec = ordenados.map(t => {
+      acum += t.tiempo_proc;
+      return { nombre: t.nombre, tiempo_proc: t.tiempo_proc, plazo: t.plazo, transito: acum, retraso: Math.max(0, acum - t.plazo) };
+    });
+    const TTT = sec.reduce((s,r) => s + r.transito, 0);
+    const TPT = TTT / sec.length;
+    const TPR = sec.reduce((s,r) => s + r.retraso, 0) / sec.length;
+    return { secuencia: sec, TTT, TPT, TPR };
+  },
+
+  obtenerResultados() {
+    const res = {};
+    REGLAS.forEach(r => res[r.key] = this.calcular(r));
+    return res;
+  },
+
+  obtenerMejores(resultados) {
+    const mejor = {};
+    ['TTT','TPT','TPR'].forEach(m => {
+      let min = Infinity, regla = null;
+      REGLAS.forEach(r => {
+        if (resultados[r.key] && resultados[r.key][m] < min) {
+          min = resultados[r.key][m];
+          regla = r.key;
+        }
+      });
+      mejor[m] = { regla, valor: min };
+    });
+    return mejor;
+  },
+
+  agregarTrabajo() {
+    const nuevoId = Math.max(0, ...this.trabajos.map(t => t.id)) + 1;
+    const nuevaLleg = Math.max(0, ...this.trabajos.map(t => t.llegada)) + 1;
+    const letra = String.fromCharCode(65 + this.trabajos.length);
+    this.trabajos.push({ id: nuevoId, nombre: letra, llegada: nuevaLleg, tiempo_proc: 1, plazo: 1 });
+    this.render();
+  },
+
+  eliminarTrabajo(id) {
+    this.trabajos = this.trabajos.filter(t => t.id !== id);
+    this.render();
+  },
+
+  actualizar(id, campo, valor) {
+    const t = this.trabajos.find(x => x.id === id);
+    if (!t) return;
+    if (campo === 'nombre') t.nombre = valor.toUpperCase();
+    else t[campo] = Math.max(0, parseInt(valor) || 0);
+    this.render();
+  },
+
+  cambiarRegla(key) {
+    this.reglaActiva = key;
+    this.render();
+  },
+
+  resetear() {
+    this.trabajos = [
+      { id: 1, nombre: 'A', llegada: 1, tiempo_proc: 3, plazo: 5 },
+      { id: 2, nombre: 'B', llegada: 2, tiempo_proc: 4, plazo: 6 },
+      { id: 3, nombre: 'C', llegada: 3, tiempo_proc: 2, plazo: 7 },
+      { id: 4, nombre: 'D', llegada: 4, tiempo_proc: 6, plazo: 9 },
+      { id: 5, nombre: 'E', llegada: 5, tiempo_proc: 1, plazo: 2 },
+    ];
+    this.render();
+  },
+
+  exportarCSV() {
+    const res = this.obtenerResultados();
+    let csv = 'REGLA,POSICION,TRABAJO,T.PROC,PLAZO,TRANSITO,RETRASO\n';
+    REGLAS.forEach(r => {
+      const d = res[r.key]; if (!d) return;
+      d.secuencia.forEach((s, i) => {
+        csv += `${r.key},${i+1},${s.nombre},${s.tiempo_proc},${s.plazo},${s.transito},${s.retraso}\n`;
+      });
+      csv += `${r.key},TOTAL,,,,TTT=${d.TTT},TPT=${d.TPT.toFixed(2)}\n`;
+      csv += `${r.key},,,,,,TPR=${d.TPR.toFixed(2)}\n\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'progsant_export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  render() {
+    document.getElementById('contador').textContent = `${this.trabajos.length} trabajos`;
+
+    const tbody = document.getElementById('tabla-trabajos');
+    tbody.innerHTML = this.trabajos.map((t, i) => `
+      <div class="grid grid-cols-12 border-b border-stone-200 ${i % 2 === 0 ? 'bg-white' : 'bg-stone-50'}">
+        <input value="${t.nombre}" maxlength="3" oninput="app.actualizar(${t.id},'nombre',this.value)" class="col-span-2 px-2 py-2 font-mono text-sm font-bold text-center bg-transparent focus:bg-yellow-100 outline-none">
+        <input type="number" value="${t.llegada}" oninput="app.actualizar(${t.id},'llegada',this.value)" class="col-span-2 px-2 py-2 font-mono text-sm text-center bg-transparent focus:bg-yellow-100 outline-none border-l border-stone-200">
+        <input type="number" value="${t.tiempo_proc}" oninput="app.actualizar(${t.id},'tiempo_proc',this.value)" class="col-span-3 px-2 py-2 font-mono text-sm text-center bg-transparent focus:bg-yellow-100 outline-none border-l border-stone-200">
+        <input type="number" value="${t.plazo}" oninput="app.actualizar(${t.id},'plazo',this.value)" class="col-span-3 px-2 py-2 font-mono text-sm text-center bg-transparent focus:bg-yellow-100 outline-none border-l border-stone-200">
+        <button onclick="app.eliminarTrabajo(${t.id})" class="col-span-2 flex items-center justify-center text-stone-400 hover:text-red-700 hover:bg-red-50 transition-colors border-l border-stone-200 text-sm">✕</button>
+      </div>
+    `).join('');
+
+    const tabs = document.getElementById('tabs');
+    tabs.innerHTML = REGLAS.map(r => `
+      <button onclick="app.cambiarRegla('${r.key}')" class="px-4 py-3 font-mono text-xs uppercase tracking-wider transition-all -mb-0.5 border-b-2 ${
+        this.reglaActiva === r.key ? 'bg-stone-900 text-stone-50 border-stone-900' : 'bg-transparent text-stone-600 border-transparent hover:text-stone-900'
+      }">${r.nombre}</button>
+    `).join('');
+
+    const resultados = this.obtenerResultados();
+    const resActual = resultados[this.reglaActiva];
+    const reglaActual = REGLAS.find(r => r.key === this.reglaActiva);
+    const detalle = document.getElementById('detalle');
+
+    if (resActual) {
+      detalle.innerHTML = `
+        <div class="bg-white border-2 border-stone-900 shadow-hard">
+          <div class="px-5 py-4 border-b-2 border-stone-900 bg-stone-50 flex items-baseline justify-between flex-wrap gap-3">
+            <div>
+              <h3 class="font-display text-xl font-bold text-stone-900">${reglaActual.nombre}</h3>
+              <p class="text-xs text-stone-600 italic">${reglaActual.descripcion}</p>
+            </div>
+            <div class="flex gap-4 font-mono text-[10px] uppercase tracking-wider">
+              <div class="text-right"><div class="text-stone-500">TTT</div><div class="text-lg font-bold text-stone-900">${resActual.TTT}</div></div>
+              <div class="text-right border-l border-stone-300 pl-4"><div class="text-stone-500">TPT</div><div class="text-lg font-bold text-stone-900">${resActual.TPT.toFixed(2)}</div></div>
+              <div class="text-right border-l border-stone-300 pl-4"><div class="text-stone-500">TPR</div><div class="text-lg font-bold text-red-700">${resActual.TPR.toFixed(2)}</div></div>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="bg-stone-900 text-stone-50">
+                  <th class="px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider text-left">#</th>
+                  <th class="px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider text-left">Sec. W</th>
+                  <th class="px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider text-right">T. Proc.</th>
+                  <th class="px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider text-right">Plazo</th>
+                  <th class="px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider text-right">Tránsito</th>
+                  <th class="px-3 py-2.5 font-mono text-[10px] uppercase tracking-wider text-right">Retraso</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${resActual.secuencia.map((s, i) => `
+                  <tr class="border-b border-stone-200 ${i % 2 === 0 ? 'bg-white' : 'bg-stone-50'}">
+                    <td class="px-3 py-2.5 font-mono text-sm font-bold text-stone-500">${i+1}</td>
+                    <td class="px-3 py-2.5 font-display text-lg font-bold text-stone-900">${s.nombre}</td>
+                    <td class="px-3 py-2.5 font-mono text-sm text-right">${s.tiempo_proc}</td>
+                    <td class="px-3 py-2.5 font-mono text-sm text-right">${s.plazo}</td>
+                    <td class="px-3 py-2.5 font-mono text-sm text-right font-bold">${s.transito}</td>
+                    <td class="px-3 py-2.5 font-mono text-sm text-right ${s.retraso > 0 ? 'text-red-700 font-bold' : 'text-stone-400'}">${s.retraso}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    const mejor = this.obtenerMejores(resultados);
+    const comp = document.getElementById('comparacion');
+    comp.innerHTML = `
+      <table class="w-full">
+        <thead>
+          <tr class="bg-stone-900 text-stone-50">
+            <th class="px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-left">Regla</th>
+            <th class="px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-left">Secuencia</th>
+            <th class="px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-right">TTT</th>
+            <th class="px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-right">TPT</th>
+            <th class="px-4 py-3 font-mono text-[10px] uppercase tracking-wider text-right">TPR</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${REGLAS.map((r, idx) => {
+            const d = resultados[r.key]; if (!d) return '';
+            const mT = mejor.TTT.regla === r.key;
+            const mP = mejor.TPT.regla === r.key;
+            const mR = mejor.TPR.regla === r.key;
+            return `
+              <tr class="border-b border-stone-200 ${idx % 2 === 0 ? 'bg-white' : 'bg-stone-50'}">
+                <td class="px-4 py-3">
+                  <div class="font-display text-lg font-bold text-stone-900">${r.nombre}</div>
+                  <div class="text-[11px] text-stone-500 italic">${r.descripcion}</div>
+                </td>
+                <td class="px-4 py-3 font-mono text-sm text-stone-700">${d.secuencia.map(s => s.nombre).join(' → ')}</td>
+                <td class="px-4 py-3 font-mono text-right font-bold ${mT ? 'bg-green-200 text-green-900' : 'text-stone-900'}">${d.TTT}${mT ? ' ♔' : ''}</td>
+                <td class="px-4 py-3 font-mono text-right font-bold ${mP ? 'bg-green-200 text-green-900' : 'text-stone-900'}">${d.TPT.toFixed(2)}${mP ? ' ♔' : ''}</td>
+                <td class="px-4 py-3 font-mono text-right font-bold ${mR ? 'bg-green-200 text-green-900' : 'text-stone-900'}">${d.TPR.toFixed(2)}${mR ? ' ♔' : ''}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+};
+
+app.render();
+</script>
+
+</body>
+</html>
